@@ -2,11 +2,85 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv/config";
 import expenseModel from "./models/expenseModel.js";
+import userModel from "./models/userModel.js";
 
 const app = express();
 
 app.use(express.json());
 
+app.post("/register",async(req,res)=>{
+    const {firstName,lastName,email,password} = req.body;
+    if(firstName && lastName && email && password){
+        try {
+            const response = userModel.create(
+                {
+                    fname:firstName,
+                    lname:lastName,
+                    email:email,
+                    password:password,
+                }
+            );
+            if(response){
+                res.status(200).json({
+                    sucess:true,
+                    message:"Account created"
+                })
+            }
+            else{
+                res.status(500).json({
+                    sucess:false,
+                    message:"An unknown error occured"
+                });
+            }
+        } catch (error) {
+            res.status(500).json({
+                sucess:false,
+                message:"An internal server error occured"
+            });
+        }
+    }
+    else{
+        res.status(400).json({
+            sucess:false,
+            message:"All fields are required"
+        });
+    }
+    
+});
+
+
+app.post("/login",async(req,res)=>{
+    const {email,password} = req.body;
+    if(email && password){
+        try {
+            const user = await userModel.findOne({email:email,password:password});
+            if(user){
+                res.status(200).json({
+                    sucess:true,
+                    message:"Login Sucess",
+                    user:user,
+                });
+            }
+            else{
+                res.status(401).json({
+                    sucess:false,
+                    message:"Login Failed"
+                });
+            }
+        } catch (error) {
+            res.status(500).json({
+                sucess:false,
+                message:"Internal server error"
+            });
+        }
+    }
+    else{
+        res.status(400).json({
+            sucess:false,
+            message:"Email and password both are required"
+        });
+    }
+});
 
 app.get("/",(req,res)=>{
     res.status(200).json({

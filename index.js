@@ -8,45 +8,49 @@ const app = express();
 
 app.use(express.json());
 
-app.post("/register",async(req,res)=>{
-    const {firstName,lastName,email,password} = req.body;
-    if(firstName && lastName && email && password){
+app.post("/register", async (req, res) => {
+    const { firstName, lastName, email, password } = req.body;
+    if (firstName && lastName && email && password) {
         try {
-            const response = userModel.create(
-                {
-                    fname:firstName,
-                    lname:lastName,
-                    email:email,
-                    password:password,
-                }
-            );
-            if(response){
+            const response = await userModel.create({
+                fname: firstName,
+                lname: lastName,
+                email: email,
+                password: password,
+            });
+
+            if (response) {
                 res.status(200).json({
-                    sucess:true,
-                    message:"Account created"
-                })
-            }
-            else{
+                    success: true,
+                    message: "Account created"
+                });
+            } else {
                 res.status(500).json({
-                    sucess:false,
-                    message:"An unknown error occured"
+                    success: false,
+                    message: "An unknown error occurred"
                 });
             }
         } catch (error) {
-            res.status(500).json({
-                sucess:false,
-                message:"An internal server error occured"
-            });
+            if (error.code === 11000 && error.keyPattern && error.keyPattern.email === 1) {
+                res.status(400).json({
+                    success: false,
+                    message: "User with this email already exists"
+                });
+            } else {
+                res.status(500).json({
+                    success: false,
+                    message: "An internal server error occurred"
+                });
+            }
         }
-    }
-    else{
+    } else {
         res.status(400).json({
-            sucess:false,
-            message:"All fields are required"
+            success: false,
+            message: "All fields are required"
         });
     }
-    
 });
+
 
 
 app.post("/login",async(req,res)=>{
@@ -64,7 +68,7 @@ app.post("/login",async(req,res)=>{
             else{
                 res.status(401).json({
                     sucess:false,
-                    message:"Login Failed"
+                    message:"Login failed,invalid credentials"
                 });
             }
         } catch (error) {
@@ -132,8 +136,6 @@ app.get("/get-expense/:id",async(req,res)=>{
         });
     }
 });
-
-
 
 app.listen(3000,async()=>{
     try {

@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv/config";
 import expenseModel from "./models/expenseModel.js";
 import userModel from "./models/userModel.js";
+import validateEmail from "./utils/validateEmail.js";
 
 const app = express();
 
@@ -11,6 +12,13 @@ app.use(express.json());
 app.post("/register", async (req, res) => {
     const { firstName, lastName, email, password } = req.body;
     if (firstName && lastName && email && password) {
+        if(!validateEmail(email)){
+            res.status(400).json({
+                sucess:false,
+                message:"Please enter the valid email"
+            });
+            return;
+        }
         try {
             const response = await userModel.create({
                 fname: firstName,
@@ -124,7 +132,15 @@ app.get("/get-expense/:id",async(req,res)=>{
     if(id){
       try {
         const response =await expenseModel.findById(id);
-        res.status(200).json(response);
+        if(response){
+            res.status(200).json(response);
+        }
+        else{
+            res.status(404).json({
+                sucess:false,
+                message:"Requested expense details is not available"
+            });
+        }
       } catch (error) {
        res.json(error);
       }

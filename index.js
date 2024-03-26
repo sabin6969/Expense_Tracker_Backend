@@ -60,7 +60,6 @@ app.post("/register", async (req, res) => {
 });
 
 
-
 app.post("/login",async(req,res)=>{
     const {email,password} = req.body;
     if(email && password){
@@ -71,6 +70,7 @@ app.post("/login",async(req,res)=>{
                     sucess:true,
                     message:"Login Sucess",
                     user:user,
+                    userId: user._id,
                 });
             }
             else{
@@ -101,27 +101,60 @@ app.get("/",(req,res)=>{
     });
 });
 
-app.post("/add-expense",async(req,res)=>{
-    const {expenseTitle,expenseAmount,expenseDescription}=req.body;
-    if(expenseTitle && expenseAmount && expenseDescription){
+
+app.get("/expenses/:userId", async (req, res) => {
+    const userId = req.params.userId;
+
+    try {
+        const expenses = await expenseModel.find({ userId: userId });
+        res.json({
+            success: true,
+            expenses: expenses
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Internal server error"
+        });
+    }
+});
+
+
+app.post("/add-expense", async (req, res) => {
+    const { expenseTitle, expenseAmount, expenseDescription, userId, transactionDate } = req.body;
+    
+    if (expenseTitle && expenseAmount && expenseDescription) {
         try {
-            const response = await  expenseModel.create({
-                expenseTitle:expenseTitle,
-                expenseAmount:expenseAmount,
-                expenseDescription:expenseDescription,
+            const response = await expenseModel.create({
+                expenseTitle: expenseTitle,
+                expenseAmount: expenseAmount,
+                expenseDescription: expenseDescription,
+                userId: userId,
+                transactionDate: transactionDate,
             });
             res.json({
-                sucess:true,
-                message:"Expense added sucessfully"
+                success: true,
+                message: "Expense added successfully"
             });
-          } catch (error) {
-            res.json(error);
-          }
-    }
-    else{
+        } catch (error) {
+            if (error.name === 'ValidationError' && error.errors && error.errors.userId) {
+        
+                res.status(400).json({
+                    success: false,
+                    message: "userId is required"
+                });
+            } else {
+                
+                res.status(500).json({
+                    success: false,
+                    message: "Internal server error"
+                });
+            }
+        }
+    } else {
         res.status(400).json({
-            sucess:false,
-            message:"All fields are required"
+            success: false,
+            message: "All fields are required"
         });
     }
 });

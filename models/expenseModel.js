@@ -4,7 +4,7 @@ const expenseSchema = new mongoose.Schema({
     expenseTitle:String,
     expenseAmount:Number,
     expenseDescription:String,
-},{timestamps:true});
+},{timestamps:false});
 
 const expenseModel = mongoose.model("expenses",expenseSchema);
 export default expenseModel;
